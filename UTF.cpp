@@ -1,6 +1,30 @@
 #include <stdint.h>
 #include "UTF.h"
 
+int UTF::one8len(char *text)
+{
+	uint8_t b0 = *text;
+	if ((b0 & 0x80) == 0)
+		return 1;
+	else if ((b0 & 0x20) == 0)
+		return 2;
+	else if ((b0 & 0x10) == 0)
+		return 3;
+	else if ((b0 & 0x08) == 0)
+		return 4;
+	else
+		return 0;
+}
+
+int UTF::one16len(wchar_t *text)
+{
+	uint16_t surrogate1 = (uint16_t)*text;
+	if (surrogate1 >= 0xD800 && surrogate1 <= 0xDBFF)
+		return 2;
+	else
+		return 1;
+}
+
 int UTF::one8to32(char *text, char **end)
 {
 	*end = text;
