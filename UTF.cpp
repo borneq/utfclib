@@ -115,7 +115,7 @@ int UTF::one32to8(int d, char *buf)
 	}
 }
 
-void UTF::utf8To16(char *str, wchar_t *wstr)
+void UTF::utf8To16_z(char *str, wchar_t *wstr)
 {
 	char *s = str;
 	wchar_t *ws = wstr;
@@ -128,7 +128,7 @@ void UTF::utf8To16(char *str, wchar_t *wstr)
 }
 
 
-void UTF::utf16To8(wchar_t *wstr, char *str)
+void UTF::utf16To8_z(wchar_t *wstr, char *str)
 {
 	wchar_t *ws = wstr;
 	char *s = str;

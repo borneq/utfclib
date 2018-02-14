@@ -30,12 +30,12 @@ void test32_8()
 void test1()
 {
 	char buf[64];
-	UTF::utf16To8(L"b\405k", buf);
+	UTF::utf16To8_z(L"b\405k", buf);
 }
 
 void test2()
 {
 	wchar_t buf[64];
-	UTF::utf8To16("b\304\205k", buf);
+	UTF::utf8To16_z("b\304\205k", buf);
 }
 
