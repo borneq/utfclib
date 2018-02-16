@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "UTF.h"
 
 int UTF::one8len(char *text)
@@ -35,24 +34,43 @@ int UTF::one8to32(char *text, char **end)
 	else if ((b0 & 0x20) == 0) {
 		uint8_t b1 = **end;
 		(*end)++;
-		return (b1 & 63) | ((int)(b0 & 31) << 6);
+		if ((b1 & 0b11000000) != 128)
+		{
+			errors++;
+			return 0xffff;
+		}
+		else
+			return (b1 & 63) | ((int)(b0 & 31) << 6);
 	}
 	else if ((b0 & 0x10) == 0) {
 		uint8_t b1 = **end;
 		(*end)++;
 		uint8_t b2 = **end;
 		(*end)++;
-		return (b2 & 63) | ((int)(b1 & 63) << 6) | ((int)(b0 & 15) << 12);
+		if ((b1 & 0b11000000) != 128 || (b2 & 0b11000000) != 128)
+		{
+			errors++;
+			return 0xffff;
+		}
+		else
+			return (b2 & 63) | ((int)(b1 & 63) << 6) | ((int)(b0 & 15) << 12);
 	}
-	else {
+	else if ((b0 & 0x08) == 0) {
 		uint8_t b1 = **end;
 		(*end)++;
 		uint8_t b2 = **end;
 		(*end)++;
 		uint8_t b3 = **end;
 		(*end)++;
-		return (b3 & 63) | ((int)(b2 & 63) << 6) | ((int)(b1 & 63) << 12) | ((int)(b0 & 7) << 18);
+		if ((b1 & 0b11000000) != 128 || (b2 & 0b11000000) != 128 || (b3 & 0b11000000) != 128)
+		{
+			errors++;
+			return 0xffff;
+		}
+		else
+			return (b3 & 63) | ((int)(b2 & 63) << 6) | ((int)(b1 & 63) << 12) | ((int)(b0 & 7) << 18);
 	}
+	else errors++;
 }
 
 int UTF::one32to16(int d, wchar_t *buf)
@@ -111,8 +129,40 @@ int UTF::one32to8(int d, char *buf)
 		buf[1] = 0x80 | ((d >> 12) & 0x3f);
 		buf[2] = 0x80 | ((d >> 6) & 0x3f);
 		buf[3] = 0x80 | (d & 0x3f);
-		return 4;		
+		return 4;
 	}
+}
+
+size_t UTF::utf8To32(char *str, uint32_t *dstr, size_t len)
+{
+	char *s = str;
+	char *sentinel = str+len;
+	uint32_t *ds = dstr;
+	while (s < sentinel)
+	{
+		if (*s > 0)
+		{
+			s++;
+			continue;
+		}
+		int len = one8len(s);
+		if (len==0)
+		{
+			*ds= 0xffff;
+			ds++;
+			s++;
+			errors++;
+			continue;
+		}
+		if (s+len>sentinel)
+		{
+			errors++;
+			break;
+		}
+		*ds = one8to32(s, &s);
+		ds++;
+	}
+	return ds-dstr;
 }
 
 void UTF::utf8To16_z(char *str, wchar_t *wstr)
@@ -123,7 +173,7 @@ void UTF::utf8To16_z(char *str, wchar_t *wstr)
 	{
 		int d = one8to32(s, &s);
 		ws += one32to16(d, ws);
-	}	
+	}
 	*ws = 0;
 }
 
